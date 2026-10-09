@@ -1,0 +1,644 @@
+/* Casino Theme CSS */
+:root {
+  --felt-green: #0d4428;
+  --felt-dark: #072314;
+  --felt-border: #d4af37;
+  --accent-gold: #f39c12;
+  --text-light: #ecf0f1;
+  --panel-bg: #1e272e;
+  --panel-light: #2f3640;
+  --card-bg: #ffffff;
+  --card-red: #e74c3c;
+  --card-black: #2c3e50;
+  --btn-green: #27ae60;
+  --btn-blue: #2980b9;
+  --btn-red: #c0392b;
+  --btn-gold: #d4ac0d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at center, #134e2e 0%, #061f12 100%);
+  color: var(--text-light);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: rgba(10, 30, 20, 0.95);
+  border-bottom: 2px solid var(--felt-border);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand h1 {
+  font-size: 1.4rem;
+  color: var(--accent-gold);
+  letter-spacing: 1px;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  background: var(--panel-light);
+  border: 1px solid #4b6584;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #485460;
+}
+
+.tab-btn.active {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--felt-border);
+}
+
+main {
+  flex: 1;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Mesa de Blackjack */
+.casino-table {
+  background: radial-gradient(ellipse at 50% 30%, #155734 0%, #0a331c 85%, #051c0f 100%);
+  border: 12px solid #3d2314;
+  border-radius: 200px 200px 80px 80px;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.7);
+  padding: 30px 40px;
+  position: relative;
+  min-height: 580px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.table-header {
+  text-align: center;
+  border-bottom: 2px dashed rgba(212, 175, 55, 0.3);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.table-rules-banner {
+  color: rgba(241, 196, 15, 0.85);
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.shoe-stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.85rem;
+  color: #bdc3c7;
+  margin-top: 6px;
+}
+
+.shoe-stats span strong {
+  color: var(--accent-gold);
+}
+
+.dealer-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dealer-label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+}
+
+.cards-container {
+  display: flex;
+  gap: 8px;
+  min-height: 105px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cartas de Juego */
+.card-view {
+  width: 70px;
+  height: 98px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  border: 1px solid #bdc3c7;
+  box-shadow: 2px 4px 8px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px;
+  font-weight: bold;
+  user-select: none;
+  position: relative;
+  animation: cardDeal 0.25s ease-out;
+}
+
+@keyframes cardDeal {
+  from { opacity: 0; transform: translateY(-30px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-view.red { color: var(--card-red); }
+.card-view.black { color: var(--card-black); }
+
+.card-view .top-left { font-size: 0.95rem; line-height: 1; }
+.card-view .center-suit { font-size: 1.6rem; text-align: center; }
+.card-view .bottom-right { font-size: 0.95rem; line-height: 1; text-align: right; transform: rotate(180deg); }
+
+.card-view.hidden-card {
+  background: repeating-linear-gradient(45deg, #7f1d1d, #7f1d1d 10px, #991b1b 10px, #991b1b 20px);
+  border: 2px solid #fff;
+}
+.card-view.hidden-card * { display: none; }
+
+/* 5 Slots de Jugadores */
+.slots-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.slot-box {
+  background: rgba(10, 30, 20, 0.85);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 250px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.slot-box.active-turn {
+  border-color: #f1c40f;
+  box-shadow: 0 0 16px rgba(241, 196, 15, 0.6);
+  background: rgba(18, 50, 33, 0.95);
+}
+
+.slot-box.empty {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 4px;
+}
+
+.slot-type-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-human { background: #2980b9; color: #fff; }
+.badge-bot { background: #8e44ad; color: #fff; }
+.badge-empty { background: #7f8c8d; color: #fff; }
+
+.slot-bankroll {
+  font-size: 0.85rem;
+  color: #2ecc71;
+  font-weight: bold;
+}
+
+.slot-hands-area {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.hand-subbox {
+  border-radius: 6px;
+  padding: 4px;
+  background: rgba(0,0,0,0.2);
+}
+
+.hand-subbox.current-hand {
+  outline: 2px solid #2ecc71;
+}
+
+.hand-cards-list {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hand-cards-list .card-view {
+  width: 48px;
+  height: 68px;
+  padding: 3px;
+}
+.hand-cards-list .card-view .top-left { font-size: 0.75rem; }
+.hand-cards-list .card-view .center-suit { font-size: 1rem; }
+.hand-cards-list .card-view .bottom-right { font-size: 0.75rem; }
+
+.hand-score {
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 4px;
+  font-weight: bold;
+}
+
+.slot-bet-area {
+  text-align: center;
+  font-size: 0.85rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 6px;
+}
+
+.bet-chip {
+  background: #e67e22;
+  color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  padding: 2px 8px;
+  font-weight: bold;
+  border: 2px dashed #f39c12;
+}
+
+/* Panel de Controles Inferior */
+.bottom-panel {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.action-bar {
+  background: var(--panel-bg);
+  border: 1px solid #4b6584;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.btn-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-action:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.btn-deal { background: var(--btn-green); }
+.btn-hit { background: var(--btn-blue); }
+.btn-stand { background: #e67e22; }
+.btn-double { background: #9b59b6; }
+.btn-split { background: #16a085; }
+.btn-surrender { background: var(--btn-red); }
+
+/* Tips y Alertas */
+.tip-box {
+  background: #1e3799;
+  border-left: 4px solid #fbc531;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.tip-title {
+  color: #fbc531;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.tip-math-card {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(15, 32, 67, 0.85);
+  border-left: 3px solid #00d2d3;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #c8d6e5;
+}
+
+.sidebar-panel {
+  background: var(--panel-bg);
+  border: 1px solid #4b6584;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hilo-analysis-card {
+  background: #1e272e;
+  border: 1px solid #f39c12;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #ecf0f1;
+}
+
+.didactic-tips-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.didactic-tip-card {
+  background: #2f3640;
+  border: 1px solid #4b6584;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 0.82rem;
+}
+
+.didactic-tip-card strong {
+  color: #f1c40f;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.mnemonic-card {
+  background: #1e272e;
+  border: 1px solid #4b6584;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.mnemonic-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--accent-gold);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.mnemonic-card h3 {
+  color: #3498db;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.mnemonic-card ul {
+  margin-left: 18px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #dcdde1;
+  line-height: 1.5;
+}
+
+/* Modales y Tablas de Estrategia */
+.strategy-matrix-container {
+  overflow-x: auto;
+  background: var(--panel-bg);
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.strategy-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
+
+.strategy-table th, .strategy-table td {
+  border: 1px solid #485460;
+  padding: 6px;
+}
+
+.strategy-table th {
+  background: #2f3640;
+  color: var(--accent-gold);
+}
+
+.cell-H { background: #2980b9; color: #fff; font-weight: bold; }
+.cell-S { background: #c0392b; color: #fff; font-weight: bold; }
+.cell-D { background: #27ae60; color: #fff; font-weight: bold; }
+.cell-Ds { background: #16a085; color: #fff; font-weight: bold; }
+.cell-P { background: #8e44ad; color: #fff; font-weight: bold; }
+.cell-Rh { background: #d35400; color: #fff; font-weight: bold; }
+
+.legend-box {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.legend-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* Entrenador de Conteo */
+.counting-trainer-wrapper {
+  background: var(--panel-bg);
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.trainer-card-stage {
+  height: 180px;
+  background: radial-gradient(circle, #195232 0%, #0c2d1b 100%);
+  border: 2px solid var(--felt-border);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.trainer-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.trainer-input-card {
+  background: var(--panel-light);
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.trainer-input-card label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: #bdc3c7;
+}
+
+.trainer-input-card input, .trainer-input-card select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #718093;
+  background: #1e272e;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.stats-history-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.stat-pill {
+  background: #2f3640;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-pill .number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent-gold);
+}
+
+.stat-pill .label {
+  font-size: 0.75rem;
+  color: #bdc3c7;
+  text-transform: uppercase;
+}
+
+/* Flashcard Quiz */
+.quiz-card-box {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 650px;
+  margin: 20px auto;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.quiz-hands-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin: 25px 0;
+}
+
+.quiz-player-hand, .quiz-dealer-hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}

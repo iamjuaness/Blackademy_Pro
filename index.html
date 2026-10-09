@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blackademy Pro & Counter Trainer</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span style="font-size: 1.8rem;">♠♥</span>
+      <h1>Blackademy Pro</h1>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-target="tab-table">Mesa de Juego (5 Slots)</button>
+      <button class="tab-btn" data-target="tab-counting">Entrenador de Conteo</button>
+      <button class="tab-btn" data-target="tab-mnemonics">Mnemotecnia y Memoria</button>
+      <button class="tab-btn" data-target="tab-quiz">Flashcard Quiz</button>
+      <button class="tab-btn" data-target="tab-strategy">Tablas de Estrategia</button>
+      <button class="tab-btn" data-target="tab-rules">Reglas y Ajustes</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- TAB 1: MESA DE JUEGO MULTISLOT -->
+    <section id="tab-table" class="tab-content active">
+      <div class="casino-table">
+        <div class="table-header">
+          <div class="table-rules-banner">Blackjack paga 3 a 2 • Dealer se planta en 17 suave (S17) • Seguro disponible</div>
+          <div class="shoe-stats">
+            <span>Running Count (RC): <strong id="running-count-display">0</strong></span>
+            <span>True Count (TC): <strong id="true-count-display">0.0</strong></span>
+            <span>Penetración del Zapato: <strong id="penetration-display">0%</strong></span>
+          </div>
+        </div>
+
+        <div class="dealer-area">
+          <div class="dealer-label">DEALER <span id="dealer-score"></span></div>
+          <div class="cards-container" id="dealer-cards"></div>
+        </div>
+
+        <div class="slots-container" id="slots-container"></div>
+      </div>
+
+      <div class="bottom-panel">
+        <div class="action-bar">
+          <div class="action-buttons">
+            <button class="btn-action btn-deal" id="btn-deal">Repartir (Deal)</button>
+            <button class="btn-action btn-hit" id="btn-hit" disabled>Pedir (Hit)</button>
+            <button class="btn-action btn-stand" id="btn-stand" disabled>Plantarse (Stand)</button>
+            <button class="btn-action btn-double" id="btn-double" disabled>Doblar (Double)</button>
+            <button class="btn-action btn-split" id="btn-split" disabled>Dividir (Split)</button>
+            <button class="btn-action btn-surrender" id="btn-surrender" disabled>Rendirse (Surrender)</button>
+          </div>
+
+          <div id="tip-display" class="tip-box" style="display: none;"></div>
+        </div>
+
+        <div class="sidebar-panel">
+          <h4 style="color:var(--accent-gold);margin-bottom:6px;">Instrucciones Rápidas</h4>
+          <p style="font-size:0.82rem;line-height:1.4;color:#bdc3c7;">
+            Haz clic en la etiqueta superior de cualquier ranura (ej: <strong>JUGADOR</strong> o <strong>VACÍO</strong>) para alternar entre Humano, Bot de Estrategia Básica, Bot Contador Hi-Lo o Vacío. Ajusta las apuestas con los botones +25/-25. Todo tu saldo y progreso se guarda automáticamente.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ENTRENADOR DE CONTEO HI-LO -->
+    <section id="tab-counting" class="tab-content">
+      <div class="counting-trainer-wrapper">
+        <h2 style="color:var(--accent-gold);margin-bottom:8px;">Gimnasio de Conteo de Cartas (Método Hi-Lo)</h2>
+        <p style="font-size:0.9rem;color:#bdc3c7;margin-bottom:16px;">
+          Entrena la velocidad y agilidad mental para contar en mesas reales. Valores: [2 a 6 = +1] | [7 a 9 = 0] | [10 a As = -1].
+        </p>
+
+        <!-- Consejos Didácticos -->
+        <h4 style="color:#00d2d3;margin-bottom:8px;">Técnicas y Atajos Mentales:</h4>
+        <div class="didactic-tips-container" id="counting-didactic-tips"></div>
+
+        <div class="trainer-controls-grid">
+          <div class="trainer-input-card">
+            <label for="trainer-mode">Modalidad de Entrenamiento</label>
+            <select id="trainer-mode">
+              <option value="progressive">Progresivo (Sube nivel y velocidad)</option>
+              <option value="fixed">Velocidad Fija (Mantiene cadencia)</option>
+              <option value="pairs">Cancelación de Parejas (2 cartas a la vez)</option>
+            </select>
+          </div>
+
+          <div class="trainer-input-card">
+            <label for="trainer-speed">Velocidad (Milisegundos por Carta)</label>
+            <input type="number" id="trainer-speed" value="1000" min="200" max="3000" step="100">
+          </div>
+
+          <div class="trainer-input-card">
+            <label for="trainer-batch">Cartas por Lote</label>
+            <input type="number" id="trainer-batch" value="10" min="4" max="52" step="2">
+          </div>
+        </div>
+
+        <button class="btn-action btn-deal" id="btn-start-trainer" style="width:100%;font-size:1.1rem;padding:12px;">Comenzar Secuencia</button>
+
+        <div class="trainer-card-stage" id="trainer-card-stage">
+          <span style="color:#7f8c8d;font-style:italic;">Presiona "Comenzar Secuencia" para iniciar el lote de cartas.</span>
+        </div>
+
+        <div id="trainer-input-box" style="display:none; gap:10px; margin-top:15px; justify-content:center;">
+          <input type="number" id="user-count-input" placeholder="¿Cuál es el conteo final?" style="padding:10px;border-radius:4px;border:1px solid #718093;width:240px;background:#1e272e;color:#fff;font-size:1.1rem;text-align:center;">
+          <button class="btn-action btn-deal" id="btn-submit-count" style="max-width:140px;">Validar</button>
+        </div>
+
+        <div id="trainer-feedback" style="margin-top:15px;"></div>
+
+        <div class="stats-history-grid">
+          <div class="stat-pill">
+            <div class="number" id="stat-trainer-level">1</div>
+            <div class="label">Nivel Actual</div>
+          </div>
+          <div class="stat-pill">
+            <div class="number" id="stat-trainer-speed">1000ms</div>
+            <div class="label">Velocidad Actual</div>
+          </div>
+          <div class="stat-pill">
+            <div class="number" id="stat-trainer-streak">0</div>
+            <div class="label">Racha de Aciertos</div>
+          </div>
+          <div class="stat-pill">
+            <div class="number" id="stat-trainer-accuracy">0%</div>
+            <div class="label">Precisión Total</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: MNEMOTECNIA Y PALACIO DE MEMORIA -->
+    <section id="tab-mnemonics" class="tab-content">
+      <div class="strategy-matrix-container" style="max-width:960px;margin:0 auto;">
+        <h2 style="color:var(--accent-gold);margin-bottom:8px;">Palacio de Memoria: Heurísticas para Memorizar las Tablas</h2>
+        <p style="color:#bdc3c7;font-size:0.9rem;margin-bottom:16px;">
+          En lugar de memorizar 250 casillas una a una, los profesionales aprenden 4 anclas mentales basadas en los puntos débiles de la baraja y del repartidor.
+        </p>
+        <div id="mnemonics-container"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: QUIZ FLASHCARD DE ESTRATEGIA -->
+    <section id="tab-quiz" class="tab-content">
+      <div class="quiz-card-box">
+        <h2 style="color:var(--accent-gold);">Desafío Rápido de Estrategia Básica</h2>
+        <p style="color:#bdc3c7;font-size:0.9rem;">Toma la decisión matemáticamente correcta con base en el valor esperado (+EV).</p>
+
+        <div id="quiz-score-display" style="font-weight:bold;color:#f1c40f;margin-top:8px;">Aciertos: 0 / 0 | Racha: 0</div>
+
+        <div class="quiz-hands-display">
+          <div class="quiz-player-hand">
+            <span style="font-size:0.85rem;color:#bdc3c7;">Tu Mano</span>
+            <div id="quiz-player-cards" class="cards-container"></div>
+          </div>
+          <div style="font-size:1.5rem;font-weight:bold;color:#f39c12;">VS</div>
+          <div class="quiz-dealer-hand">
+            <span style="font-size:0.85rem;color:#bdc3c7;">Dealer Visible</span>
+            <div id="quiz-dealer-card" class="cards-container"></div>
+          </div>
+        </div>
+
+        <div class="quiz-buttons-grid">
+          <button class="btn-action btn-hit btn-quiz-action" data-action="H">Pedir (Hit)</button>
+          <button class="btn-action btn-stand btn-quiz-action" data-action="S">Plantarse (Stand)</button>
+          <button class="btn-action btn-double btn-quiz-action" data-action="D">Doblar (Double)</button>
+          <button class="btn-action btn-split btn-quiz-action" data-action="P">Dividir (Split)</button>
+          <button class="btn-action btn-surrender btn-quiz-action" data-action="Rh">Rendirse (Surrender)</button>
+        </div>
+
+        <div id="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: TABLAS DE ESTRATEGIA MATRICIALES -->
+    <section id="tab-strategy" class="tab-content">
+      <div class="strategy-matrix-container">
+        <h2 style="color:var(--accent-gold);margin-bottom:12px;">Tablas de Estrategia Básica Estándar</h2>
+
+        <div class="legend-box">
+          <div class="legend-item"><span class="legend-pill cell-H">H</span> Pedir Carta (Hit)</div>
+          <div class="legend-item"><span class="legend-pill cell-S">S</span> Plantarse (Stand)</div>
+          <div class="legend-item"><span class="legend-pill cell-D">D</span> Doblar (Hit si no es permitido)</div>
+          <div class="legend-item"><span class="legend-pill cell-Ds">Ds</span> Doblar (Plantarse si no es permitido)</div>
+          <div class="legend-item"><span class="legend-pill cell-P">P</span> Dividir Pareja (Split)</div>
+          <div class="legend-item"><span class="legend-pill cell-Rh">Rh</span> Rendirse (Surrender, Hit si no es permitido)</div>
+        </div>
+
+        <h3 style="color:#3498db;margin:16px 0 8px 0;">1. Totales Duros (Hard Totals)</h3>
+        <div id="table-hard-totals"></div>
+
+        <h3 style="color:#2ecc71;margin:16px 0 8px 0;">2. Totales Suaves con As (Soft Totals)</h3>
+        <div id="table-soft-totals"></div>
+
+        <h3 style="color:#9b59b6;margin:16px 0 8px 0;">3. Parejas Dividibles (Pair Splitting)</h3>
+        <div id="table-pairs-totals"></div>
+
+        <h3 style="color:#f1c40f;margin:24px 0 8px 0;">4. Las 18 Desviaciones de Schlesinger (Illustrious 18)</h3>
+        <table class="strategy-table">
+          <thead>
+            <tr>
+              <th>Índice</th>
+              <th>Mano del Jugador</th>
+              <th>Carta Dealer</th>
+              <th>True Count Umbral</th>
+              <th>Desviación vs Básica</th>
+            </tr>
+          </thead>
+          <tbody id="table-ill18-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 6: REGLAS Y AJUSTES -->
+    <section id="tab-rules" class="tab-content">
+      <div class="strategy-matrix-container" style="max-width:700px;margin:0 auto;">
+        <h2 style="color:var(--accent-gold);margin-bottom:16px;">Configuración de Reglas y Aprendizaje</h2>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="trainer-input-card">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="rule-show-math" checked style="width:20px;height:20px;">
+              <span><strong>Habilitar Explicación Matemática Detallada (+EV)</strong> en tips y quizzes</span>
+            </label>
+          </div>
+
+          <div class="trainer-input-card">
+            <label for="rule-decks">Número de Barajas en el Zapato (Shoe):</label>
+            <select id="rule-decks">
+              <option value="1">1 Baraja (Single Deck)</option>
+              <option value="2">2 Barajas (Double Deck)</option>
+              <option value="4">4 Barajas</option>
+              <option value="6" selected>6 Barajas (Estándar de Casino)</option>
+              <option value="8">8 Barajas (Zapato Grande)</option>
+            </select>
+          </div>
+
+          <div class="trainer-input-card">
+            <label for="rule-s17">Regla del Dealer en 17 Suave (Soft 17):</label>
+            <select id="rule-s17">
+              <option value="S17" selected>S17: El Dealer se Planta en 17 suave (Mejor para el jugador)</option>
+              <option value="H17">H17: El Dealer Pide carta en 17 suave (+0.2% ventaja casa)</option>
+            </select>
+          </div>
+
+          <div class="trainer-input-card">
+            <label for="rule-bj-payout">Pago por Blackjack Natural:</label>
+            <select id="rule-bj-payout">
+              <option value="1.5" selected>3:2 (Pago tradicional estándar - 1.5x)</option>
+              <option value="1.2">6:5 (Regla desfavorable de casino moderno - 1.2x)</option>
+            </select>
+          </div>
+
+          <div class="trainer-input-card">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="rule-surrender" checked style="width:20px;height:20px;">
+              <span>Permitir Rendición Tardía (Late Surrender - Recupera 50% de la apuesta)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
