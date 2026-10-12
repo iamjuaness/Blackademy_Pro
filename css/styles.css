@@ -1,4 +1,8 @@
-/* Casino Theme CSS */
+/* ==========================================================================
+   Blackademy Pro - Casino Responsive Theme
+   Compatible con Móviles, Tablets, Laptops y Pantallas Ultra-Wide
+   ========================================================================== */
+
 :root {
   --felt-green: #0d4428;
   --felt-dark: #072314;
@@ -14,59 +18,90 @@
   --btn-blue: #2980b9;
   --btn-red: #c0392b;
   --btn-gold: #d4ac0d;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
 }
 
 body {
   background: radial-gradient(circle at center, #134e2e 0%, #061f12 100%);
   color: var(--text-light);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
+/* ==========================================================================
+   Cabecera y Navegación Adaptativa
+   ========================================================================== */
+
 header {
-  background: rgba(10, 30, 20, 0.95);
+  background: rgba(10, 30, 20, 0.96);
   border-bottom: 2px solid var(--felt-border);
-  padding: 12px 24px;
+  padding: 10px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .brand h1 {
-  font-size: 1.4rem;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
   color: var(--accent-gold);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .nav-tabs {
   display: flex;
   gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 4px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
   background: var(--panel-light);
   border: 1px solid #4b6584;
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s;
+  font-size: clamp(0.78rem, 1.5vw, 0.9rem);
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .tab-btn:hover {
@@ -79,58 +114,74 @@ header {
   border-color: var(--felt-border);
 }
 
+/* ==========================================================================
+   Contenedor Principal
+   ========================================================================== */
+
 main {
   flex: 1;
-  padding: 20px;
-  max-width: 1400px;
+  padding: clamp(10px, 2vw, 20px);
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
 
 .tab-content {
   display: none;
+  animation: fadeIn 0.25s ease-out;
 }
 
 .tab-content.active {
   display: block;
 }
 
-/* Mesa de Blackjack */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Mesa de Blackjack Principal
+   ========================================================================== */
+
 .casino-table {
   background: radial-gradient(ellipse at 50% 30%, #155734 0%, #0a331c 85%, #051c0f 100%);
-  border: 12px solid #3d2314;
-  border-radius: 200px 200px 80px 80px;
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.7);
-  padding: 30px 40px;
+  border: clamp(5px, 1vw, 10px) solid #3d2314;
+  border-radius: clamp(24px, 8vw, 140px) clamp(24px, 8vw, 140px) clamp(20px, 5vw, 70px) clamp(20px, 5vw, 70px);
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.7);
+  padding: clamp(14px, 2.5vw, 32px);
   position: relative;
-  min-height: 580px;
+  min-height: 480px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  width: 100%;
 }
 
 .table-header {
   text-align: center;
   border-bottom: 2px dashed rgba(212, 175, 55, 0.3);
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .table-rules-banner {
-  color: rgba(241, 196, 15, 0.85);
-  font-size: 0.95rem;
-  letter-spacing: 2px;
+  color: rgba(241, 196, 15, 0.9);
+  font-size: clamp(0.72rem, 1.8vw, 0.92rem);
+  letter-spacing: 1px;
   text-transform: uppercase;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 .shoe-stats {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: clamp(0.75rem, 1.6vw, 0.85rem);
   color: #bdc3c7;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .shoe-stats span strong {
@@ -141,11 +192,11 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 10px 0 20px 0;
 }
 
 .dealer-label {
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
   font-weight: bold;
   color: var(--accent-gold);
   margin-bottom: 8px;
@@ -153,66 +204,105 @@ main {
 
 .cards-container {
   display: flex;
-  gap: 8px;
-  min-height: 105px;
+  gap: 6px;
+  min-height: 90px;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* Cartas de Juego */
+/* ==========================================================================
+   Diseño de Naipes / Cartas
+   ========================================================================== */
+
 .card-view {
-  width: 70px;
-  height: 98px;
+  width: clamp(54px, 8vw, 70px);
+  height: clamp(76px, 11vw, 98px);
   background: var(--card-bg);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid #bdc3c7;
-  box-shadow: 2px 4px 8px rgba(0,0,0,0.4);
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 6px;
+  padding: clamp(3px, 0.8vw, 6px);
   font-weight: bold;
   user-select: none;
   position: relative;
-  animation: cardDeal 0.25s ease-out;
+  flex-shrink: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.2s ease;
 }
 
-@keyframes cardDeal {
-  from { opacity: 0; transform: translateY(-30px) scale(0.9); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+/* Solo las cartas recién repartidas ejecutan el vuelo desde el zapato */
+.card-view.card-deal-anim {
+  animation: cardDealFlight 0.48s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes cardDealFlight {
+  0% {
+    opacity: 0;
+    transform: translateY(-90px) scale(0.55) rotate(-14deg);
+    box-shadow: 0 25px 30px rgba(0, 0, 0, 0.7);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.03) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Estilo para el botón de alternancia de modo de reparto */
+#btn-deal-mode {
+  background: #34495e;
+  border: 1px solid #576574;
+  color: #f1c40f;
+  font-size: 0.8rem;
+}
+
+#btn-deal-mode:hover {
+  background: #485460;
 }
 
 .card-view.red { color: var(--card-red); }
 .card-view.black { color: var(--card-black); }
 
-.card-view .top-left { font-size: 0.95rem; line-height: 1; }
-.card-view .center-suit { font-size: 1.6rem; text-align: center; }
-.card-view .bottom-right { font-size: 0.95rem; line-height: 1; text-align: right; transform: rotate(180deg); }
+.card-view .top-left { font-size: clamp(0.72rem, 1.4vw, 0.95rem); line-height: 1; }
+.card-view .center-suit { font-size: clamp(1.1rem, 2.2vw, 1.6rem); text-align: center; }
+.card-view .bottom-right { font-size: clamp(0.72rem, 1.4vw, 0.95rem); line-height: 1; text-align: right; transform: rotate(180deg); }
 
 .card-view.hidden-card {
-  background: repeating-linear-gradient(45deg, #7f1d1d, #7f1d1d 10px, #991b1b 10px, #991b1b 20px);
+  background: repeating-linear-gradient(45deg, #7f1d1d, #7f1d1d 8px, #991b1b 8px, #991b1b 16px);
   border: 2px solid #fff;
 }
 .card-view.hidden-card * { display: none; }
 
-/* 5 Slots de Jugadores */
+/* ==========================================================================
+   Slots de Jugadores (Rejilla y Modo Carrusel Móvil)
+   ========================================================================== */
+
 .slots-container {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  margin-top: 30px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
 }
 
 .slot-box {
-  background: rgba(10, 30, 20, 0.85);
-  border: 2px solid rgba(212, 175, 55, 0.4);
-  border-radius: 12px;
-  padding: 12px 8px;
+  background: rgba(10, 30, 20, 0.88);
+  border: 2px solid rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 250px;
-  transition: all 0.2s;
+  min-height: 240px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   position: relative;
 }
 
@@ -231,17 +321,19 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.78rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 4px;
+  gap: 4px;
 }
 
 .slot-type-badge {
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .badge-human { background: #2980b9; color: #fff; }
@@ -249,23 +341,25 @@ main {
 .badge-empty { background: #7f8c8d; color: #fff; }
 
 .slot-bankroll {
-  font-size: 0.85rem;
+  font-size: clamp(0.75rem, 1.4vw, 0.85rem);
   color: #2ecc71;
   font-weight: bold;
+  margin-top: 4px;
 }
 
 .slot-hands-area {
-  min-height: 110px;
+  min-height: 95px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 8px 0;
+  gap: 6px;
+  margin: 6px 0;
+  justify-content: center;
 }
 
 .hand-subbox {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 4px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .hand-subbox.current-hand {
@@ -274,22 +368,23 @@ main {
 
 .hand-cards-list {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .hand-cards-list .card-view {
-  width: 48px;
-  height: 68px;
-  padding: 3px;
+  width: clamp(38px, 5.5vw, 46px);
+  height: clamp(54px, 7.8vw, 66px);
+  padding: 2px;
 }
-.hand-cards-list .card-view .top-left { font-size: 0.75rem; }
-.hand-cards-list .card-view .center-suit { font-size: 1rem; }
-.hand-cards-list .card-view .bottom-right { font-size: 0.75rem; }
+
+.hand-cards-list .card-view .top-left { font-size: 0.68rem; }
+.hand-cards-list .card-view .center-suit { font-size: 0.85rem; }
+.hand-cards-list .card-view .bottom-right { font-size: 0.68rem; }
 
 .hand-score {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-align: center;
   margin-top: 4px;
   font-weight: bold;
@@ -297,64 +392,90 @@ main {
 
 .slot-bet-area {
   text-align: center;
-  font-size: 0.85rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 6px;
 }
 
 .bet-chip {
   background: #e67e22;
   color: #fff;
-  border-radius: 50%;
+  border-radius: 12px;
   display: inline-block;
   padding: 2px 8px;
   font-weight: bold;
-  border: 2px dashed #f39c12;
+  border: 1px dashed #f39c12;
 }
 
-/* Panel de Controles Inferior */
+.chip-add-btn {
+  background: var(--panel-light);
+  color: var(--accent-gold);
+  border: 1px solid #4b6584;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 2px 1px;
+  transition: all 0.15s;
+}
+
+.chip-add-btn:hover, .chip-add-btn:active {
+  background: var(--accent-gold);
+  color: #000;
+}
+
+/* ==========================================================================
+   Panel Inferior y Barra de Acciones
+   ========================================================================== */
+
 .bottom-panel {
-  margin-top: 20px;
+  margin-top: 16px;
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 
 .action-bar {
   background: var(--panel-bg);
   border: 1px solid #4b6584;
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: var(--radius-md);
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .action-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .btn-action {
-  flex: 1;
-  min-width: 90px;
-  padding: 10px 14px;
+  min-height: 44px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
+  font-size: clamp(0.78rem, 1.4vw, 0.88rem);
   cursor: pointer;
-  color: white;
-  transition: transform 0.1s, opacity 0.2s;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 0.1s, opacity 0.2s, filter 0.2s;
 }
 
 .btn-action:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
+  filter: grayscale(0.5);
 }
 
-.btn-action:not(:disabled):hover {
-  transform: translateY(-2px);
+.btn-action:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 .btn-deal { background: var(--btn-green); }
@@ -370,7 +491,7 @@ main {
   border-left: 4px solid #fbc531;
   padding: 10px;
   border-radius: 4px;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   line-height: 1.4;
 }
 
@@ -382,48 +503,51 @@ main {
 
 .tip-math-card {
   margin-top: 8px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: rgba(15, 32, 67, 0.85);
   border-left: 3px solid #00d2d3;
   border-radius: 4px;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.8rem;
+  line-height: 1.4;
   color: #c8d6e5;
+  word-break: break-word;
 }
 
 .sidebar-panel {
   background: var(--panel-bg);
   border: 1px solid #4b6584;
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: var(--radius-md);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.hilo-analysis-card {
-  background: #1e272e;
-  border: 1px solid #f39c12;
-  border-radius: 6px;
-  padding: 12px;
-  font-size: 0.88rem;
-  line-height: 1.4;
-  color: #ecf0f1;
+/* ==========================================================================
+   Entrenador de Conteo Hi-Lo
+   ========================================================================== */
+
+.counting-trainer-wrapper {
+  background: var(--panel-bg);
+  border-radius: var(--radius-md);
+  padding: clamp(14px, 2.5vw, 24px);
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .didactic-tips-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .didactic-tip-card {
   background: #2f3640;
   border: 1px solid #4b6584;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .didactic-tip-card strong {
@@ -432,144 +556,36 @@ main {
   margin-bottom: 4px;
 }
 
-.mnemonic-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 15px;
-}
-
-.mnemonic-card {
-  background: #1e272e;
-  border: 1px solid #4b6584;
-  border-radius: 8px;
-  padding: 16px;
-  position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.mnemonic-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: var(--accent-gold);
-  color: #000;
-  font-size: 0.7rem;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-.mnemonic-card h3 {
-  color: #3498db;
-  font-size: 1.05rem;
-  margin-bottom: 8px;
-}
-
-.mnemonic-card ul {
-  margin-left: 18px;
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: #dcdde1;
-  line-height: 1.5;
-}
-
-/* Modales y Tablas de Estrategia */
-.strategy-matrix-container {
-  overflow-x: auto;
-  background: var(--panel-bg);
-  padding: 20px;
-  border-radius: 10px;
-  margin-top: 15px;
-}
-
-.strategy-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-  font-size: 0.85rem;
-  margin-bottom: 24px;
-}
-
-.strategy-table th, .strategy-table td {
-  border: 1px solid #485460;
-  padding: 6px;
-}
-
-.strategy-table th {
-  background: #2f3640;
-  color: var(--accent-gold);
-}
-
-.cell-H { background: #2980b9; color: #fff; font-weight: bold; }
-.cell-S { background: #c0392b; color: #fff; font-weight: bold; }
-.cell-D { background: #27ae60; color: #fff; font-weight: bold; }
-.cell-Ds { background: #16a085; color: #fff; font-weight: bold; }
-.cell-P { background: #8e44ad; color: #fff; font-weight: bold; }
-.cell-Rh { background: #d35400; color: #fff; font-weight: bold; }
-
-.legend-box {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-}
-
-.legend-pill {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-/* Entrenador de Conteo */
-.counting-trainer-wrapper {
-  background: var(--panel-bg);
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
 .trainer-card-stage {
-  height: 180px;
+  height: clamp(140px, 25vw, 180px);
   background: radial-gradient(circle, #195232 0%, #0c2d1b 100%);
   border: 2px solid var(--felt-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  margin: 16px 0;
   position: relative;
+  gap: 10px;
+  padding: 10px;
 }
 
 .trainer-controls-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .trainer-input-card {
   background: var(--panel-light);
-  padding: 12px;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
 }
 
 .trainer-input-card label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   margin-bottom: 6px;
   color: #bdc3c7;
 }
@@ -581,64 +597,498 @@ main {
   border: 1px solid #718093;
   background: #1e272e;
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .stats-history-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .stat-pill {
   background: #2f3640;
-  border-radius: 6px;
-  padding: 12px;
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
   text-align: center;
 }
 
 .stat-pill .number {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
   font-weight: bold;
   color: var(--accent-gold);
 }
 
 .stat-pill .label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #bdc3c7;
   text-transform: uppercase;
 }
 
-/* Flashcard Quiz */
+.hilo-analysis-card {
+  background: #1e272e;
+  border: 1px solid #f39c12;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: #ecf0f1;
+}
+
+/* ==========================================================================
+   Flashcard Quiz
+   ========================================================================== */
+
 .quiz-card-box {
   background: var(--panel-bg);
-  border-radius: 12px;
-  padding: 30px;
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 3vw, 28px);
   max-width: 650px;
-  margin: 20px auto;
+  margin: 10px auto;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  width: 100%;
 }
 
 .quiz-hands-display {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 40px;
-  margin: 25px 0;
+  gap: clamp(14px, 4vw, 36px);
+  margin: 20px 0;
+  flex-wrap: wrap;
 }
 
 .quiz-player-hand, .quiz-dealer-hand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .quiz-buttons-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ==========================================================================
+   Tablas de Estrategia y Desplazamiento Horizontal
+   ========================================================================== */
+
+.strategy-matrix-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--panel-bg);
+  padding: clamp(12px, 2vw, 20px);
+  border-radius: var(--radius-md);
+  margin-top: 14px;
+  width: 100%;
+}
+
+.strategy-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: clamp(0.75rem, 1.4vw, 0.84rem);
+  margin-bottom: 20px;
+}
+
+.strategy-table th, .strategy-table td {
+  border: 1px solid #485460;
+  padding: 6px 4px;
+}
+
+.strategy-table th {
+  background: #2f3640;
+  color: var(--accent-gold);
+  position: sticky;
+  top: 0;
+}
+
+/* Fila de mano fija para lectura cómoda en móviles */
+.strategy-table th:first-child,
+.strategy-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: #232b32;
+  z-index: 2;
+  font-weight: bold;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.cell-H { background: #2980b9; color: #fff; font-weight: bold; }
+.cell-S { background: #c0392b; color: #fff; font-weight: bold; }
+.cell-D { background: #27ae60; color: #fff; font-weight: bold; }
+.cell-Ds { background: #16a085; color: #fff; font-weight: bold; }
+.cell-P { background: #8e44ad; color: #fff; font-weight: bold; }
+.cell-Rh { background: #d35400; color: #fff; font-weight: bold; }
+
+.legend-box {
+  display: flex;
   gap: 10px;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.legend-pill {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   Mnemotecnia y Palacio de Memoria
+   ========================================================================== */
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.mnemonic-card {
+  background: #1e272e;
+  border: 1px solid #4b6584;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mnemonic-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--accent-gold);
+  color: #000;
+  font-size: 0.68rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.mnemonic-card h3 {
+  color: #3498db;
+  font-size: 0.98rem;
+  margin-bottom: 6px;
+  padding-right: 50px;
+}
+
+.mnemonic-card ul {
+  margin-left: 16px;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: #dcdde1;
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   Media Queries Específicas
+   ========================================================================== */
+
+/* Tablets y Pantallas Medianas (<= 1024px) */
+@media (max-width: 1024px) {
+  .slots-container {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+
+  .bottom-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dispositivos Móviles y Tablets Pequeñas (<= 768px) */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px 12px;
+  }
+
+  .brand {
+    justify-content: center;
+  }
+
+  .nav-tabs {
+    justify-content: flex-start;
+  }
+
+  .casino-table {
+    min-height: auto;
+    padding: 14px 10px;
+  }
+
+  /* Carrusel horizontal deslizante para los 5 slots en móvil */
+  .slots-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 2px 10px 2px;
+    gap: 10px;
+  }
+
+  .slot-box {
+    flex: 0 0 clamp(180px, 72vw, 230px);
+    scroll-snap-align: center;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-history-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Teléfonos Pequeños (<= 480px) */
+@media (max-width: 480px) {
+  .brand h1 {
+    font-size: 1.15rem;
+  }
+
+  .tab-btn {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .slot-box {
+    flex: 0 0 82vw;
+    min-height: 220px;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .btn-action {
+    font-size: 0.78rem;
+    padding: 10px 8px;
+  }
+
+  .quiz-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #user-count-input {
+    width: 100% !important;
+  }
+
+  #trainer-input-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #btn-submit-count {
+    max-width: 100% !important;
+    width: 100%;
+  }
+}
+
+/* Gamificación estilo Duolingo */
+.gamification-dashboard {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 10px;
+}
+.duo-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e272e;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid #34495e;
+  margin-bottom: 24px;
+}
+.duo-stat {
+  font-size: 1.1rem;
+  color: #ecf0f1;
+}
+.btn-refill-hearts {
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.world-block {
+  margin-bottom: 35px;
+  background: rgba(30, 39, 46, 0.6);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #2f3640;
+}
+.world-title {
+  color: var(--accent-gold, #f1c40f);
+  margin-bottom: 4px;
+}
+.world-desc {
+  color: #bdc3c7;
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+.lesson-nodes-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.lesson-node-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #34495e;
+  background: #2c3e50;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.15s, border-color 0.15s;
+  box-shadow: 0 4px 0 #1a252f;
+}
+.lesson-node-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #f39c12;
+}
+.lesson-node-btn.unlocked {
+  background: #2980b9;
+  border-color: #3498db;
+  box-shadow: 0 4px 0 #1b4f72;
+}
+.lesson-node-btn.completed {
+  background: #27ae60;
+  border-color: #2ecc71;
+  box-shadow: 0 4px 0 #196f3d;
+}
+.lesson-node-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Modal y etapa */
+.duo-modal {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.duo-modal-content {
+  background: #1e272e;
+  width: 90%;
+  max-width: 520px;
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid #485460;
+}
+.duo-progress-bar-wrap {
+  background: #2f3640;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 14px 0 20px;
+}
+.duo-progress-bar-inner {
+  height: 100%;
+  background: #2ecc71;
+  width: 0%;
+  transition: width 0.25s ease-out;
+}
+.duo-stage-area {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+  margin-bottom: 20px;
+}
+.duo-controls-area {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Mejoras: interfaz de lecciones, accesibilidad y pulido
+   ========================================================================== */
+.tree-container { display: flex; flex-direction: column; gap: 4px; }
+.duo-modal-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.btn-close-x {
+  background: transparent; border: 1px solid #485460; color: #ecf0f1; border-radius: 50%;
+  width: 36px; height: 36px; font-size: 1rem; cursor: pointer; flex-shrink: 0;
+}
+.btn-close-x:hover { background: #c0392b; border-color: #c0392b; }
+.duo-controls-area { flex-wrap: wrap; align-items: center; }
+.duo-feedback-banner { margin-top: 14px; padding: 10px 14px; border-radius: 8px; font-weight: bold; text-align: center; }
+.duo-feedback-banner.ok { background: #27ae60; color: #fff; }
+.duo-feedback-banner.bad { background: #c0392b; color: #fff; }
+.lesson-info-box { background: #2c3e50; padding: 12px; border-radius: 8px; text-align: center; font-size: 1rem; line-height: 1.5; }
+.lesson-number-input {
+  padding: 10px; border-radius: 6px; border: 1px solid #718093; background: #1e272e; color: #fff;
+  font-size: 1.1rem; text-align: center; width: 160px;
+}
+.seq-counter { font-size: 0.85rem; color: #bdc3c7; margin-bottom: 8px; }
+.tray-bar { width: 100%; max-width: 360px; height: 18px; background: #2f3640; border-radius: 9px; overflow: hidden; border: 1px solid #485460; }
+.tray-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); }
+
+.icon-btn {
+  background: var(--panel-light); border: 1px solid #4b6584; color: #fff; border-radius: var(--radius-sm);
+  width: 40px; height: 40px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+}
+.icon-btn:hover { background: #485460; }
+.site-footer { text-align: center; font-size: 0.75rem; color: #95a5a6; padding: 14px 16px 20px; }
+
+:focus-visible { outline: 3px solid #f1c40f; outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Mapa de calor de precisión por celda (el color varía de rojo a verde con --acc 0..100) */
+.strategy-table td[data-accuracy] { position: relative; }
+.strategy-table td[data-accuracy]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: hsl(calc(var(--acc) * 1.2), 85%, 45%); opacity: 0.4;
+}
+.cell-D, .cell-Ds { box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+.cell-Rh { text-decoration: underline; }
+
+.toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); max-width: 92vw;
+  background: #1e272e; color: #ecf0f1; border: 1px solid #f39c12; border-radius: 10px;
+  padding: 10px 16px; z-index: 10000; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 768px) {
+  .btn-action, .tab-btn, .chip-add-btn { min-height: 44px; }
+  header { position: relative; }
+  .icon-btn { position: absolute; top: 8px; right: 12px; }
 }

@@ -1,5 +1,5 @@
-// counting.js - Entrenador pedagógico de conteo Hi-Lo con análisis de jugadas óptimas
-import { Card, RANKS, SUITS } from './strategy.js';
+// counting.js - Entrenador de conteo Hi-Lo con TC real y validación de respuestas
+import { Card, RANKS, SUITS, ILLUSTRIOUS_18 } from './strategy.js';
 import { sounds } from './audio.js';
 
 export const COUNTING_TIPS = [
@@ -17,7 +17,7 @@ export const COUNTING_TIPS = [
   },
   {
     title: 'Ventaja y Bet Spread',
-    text: 'A partir de TC >= +2, la ventaja matemática pasa del casino al jugador (+0.5% por cada punto de TC). Es el momento de incrementar el tamaño de la apuesta.'
+    text: 'Cada punto de True Count aporta aproximadamente +0.5% de ventaja al jugador. El punto de equilibrio depende de las reglas y suele estar cerca de TC +1; por encima de ahí es donde se sube la apuesta.'
   }
 ];
 
@@ -28,7 +28,7 @@ export class CountingTrainer {
     this.onStateChange = callbacks.onStateChange || (() => {});
 
     this.timerId = null;
-    this.mode = 'progressive'; // 'progressive', 'fixed', 'pairs'
+    this.mode = 'progressive';
     this.level = 1;
     this.speedMs = 1200;
     this.batchSize = 10;
@@ -36,6 +36,7 @@ export class CountingTrainer {
     this.runningCount = 0;
     this.currentIndex = 0;
     this.isRunning = false;
+    this.awaitingAnswer = false;
 
     this.stats = {
       drillsCompleted: 0,
@@ -50,9 +51,7 @@ export class CountingTrainer {
     const cards = [];
     for (let d = 0; d < decksCount; d++) {
       for (const s of SUITS) {
-        for (const r of RANKS) {
-          cards.push(new Card(r, s));
-        }
+        for (const r of RANKS) cards.push(new Card(r, s));
       }
     }
     for (let i = cards.length - 1; i > 0; i--) {
@@ -64,15 +63,17 @@ export class CountingTrainer {
 
   start(options = {}) {
     this.stop();
+    this.awaitingAnswer = false;
     this.mode = options.mode || this.mode;
 
     if (this.mode === 'progressive') {
       this.speedMs = Math.max(250, 1500 - (this.level - 1) * 120);
-      this.batchSize = 6 + (this.level * 2);
+      this.batchSize = 6 + this.level * 2;
     } else {
       this.speedMs = options.speedMs || this.speedMs;
       this.batchSize = options.batchSize || this.batchSize;
     }
+    if (this.mode === 'pairs' && this.batchSize % 2 !== 0) this.batchSize += 1;
 
     this.deck = this.buildDeck(Math.ceil(this.batchSize / 52) + 1);
     this.runningCount = 0;
@@ -85,11 +86,10 @@ export class CountingTrainer {
         this.finishBatch();
         return;
       }
-
       if (this.mode === 'pairs') {
         const c1 = this.deck.pop();
         const c2 = this.deck.pop();
-        this.runningCount += (c1.hiLoValue + c2.hiLoValue);
+        this.runningCount += c1.hiLoValue + c2.hiLoValue;
         this.currentIndex += 2;
         sounds.playCard();
         this.onTick([c1, c2], this.currentIndex, this.batchSize);
@@ -106,12 +106,33 @@ export class CountingTrainer {
   finishBatch() {
     this.stop();
     this.isRunning = false;
+    this.awaitingAnswer = true;
     this.onStateChange({ isRunning: false, waitingInput: true });
     this.onFinished(this.batchSize);
   }
 
+  getBetAdvice(tc) {
+    if (tc < 1) return 'Apuesta mínima (1 unidad, $25): con TC < +1 la ventaja sigue siendo de la casa.';
+    const units = Math.min(6, Math.floor(tc));
+    return `Sube a ${units} unidad${units > 1 ? 'es' : ''} ($${units * 25}). Cada punto de TC aporta aprox. +0.5% de ventaja.`;
+  }
+
+  getDeviationHint(tc) {
+    const active = ILLUSTRIOUS_18
+      .filter(i => i.triggerTC >= 0 && tc >= i.triggerTC)
+      .map(i => i.action);
+    return active.length
+      ? `Desviaciones positivas activas con TC ${tc}: ${active.join(' · ')}`
+      : 'Sin desviaciones positivas activas: juega estrategia básica.';
+  }
+
+  // Devuelve null si no se esperaba respuesta, { invalid: true } si no es un entero válido.
   submitAnswer(userCount) {
-    const guess = parseInt(userCount, 10);
+    if (!this.awaitingAnswer) return null;
+    const guess = Number.parseInt(userCount, 10);
+    if (Number.isNaN(guess)) return { invalid: true };
+    this.awaitingAnswer = false;
+
     const correct = guess === this.runningCount;
     const diff = Math.abs(guess - this.runningCount);
 
@@ -119,52 +140,27 @@ export class CountingTrainer {
     if (correct) {
       this.stats.correctCount++;
       this.stats.currentStreak++;
-      if (this.stats.currentStreak > this.stats.bestStreak) {
-        this.stats.bestStreak = this.stats.currentStreak;
-      }
+      this.stats.bestStreak = Math.max(this.stats.bestStreak, this.stats.currentStreak);
       sounds.playWin();
-
-      if (this.mode === 'progressive') {
-        this.level++;
-      }
+      if (this.mode === 'progressive') this.level++;
     } else {
       this.stats.currentStreak = 0;
       sounds.playLoss();
     }
 
-    // Análisis de la jugada óptima bajo este conteo Hi-Lo
-    const tcEstimate = Math.round((this.runningCount / 2) * 10) / 10;
-    let bettingAdvice = '';
-    let strategicDeviation = '';
+    const decksLeft = Math.max(0.5, Math.round((this.deck.length / 52) * 2) / 2);
+    const tcEstimate = Math.round((this.runningCount / decksLeft) * 10) / 10;
 
-    if (tcEstimate <= 1) {
-      bettingAdvice = 'Mantener la apuesta mínima base ($25 / 1 unidad). Con TC <= +1 la ventaja estadística aún pertenece al casino.';
-    } else if (tcEstimate >= 2 && tcEstimate < 4) {
-      bettingAdvice = `Aumentar la apuesta a ${Math.round(tcEstimate)} unidades ($${Math.round(tcEstimate) * 25}). La ventaja se ha inclinado hacia el jugador en un ~+${((tcEstimate - 1) * 0.5).toFixed(1)}%.`;
-    } else {
-      bettingAdvice = `Apostar agresivamente el máximo spread (4 a 6 unidades: $100 - $150). Alta abundancia de naipes de 10 puntos y Ases.`;
-    }
-
-    if (tcEstimate >= 3) {
-      strategicDeviation = 'Con este conteo (TC >= +3), la desviación #1 de Illustrious 18 se activa: Tomar el Seguro si el repartidor muestra un As pasa a ser una jugada matemáticamente ganadora (+EV).';
-    } else if (tcEstimate >= 0) {
-      strategicDeviation = 'Con TC >= 0, la desviación #2 se activa: si tienes 16 contra un 10 del repartidor, la mejor jugada es Plantarse en lugar de pedir carta.';
-    } else {
-      strategicDeviation = 'Con conteo negativo, la baraja tiene déficit de cartas altas. Se debe jugar la estrategia básica estricta sin doblajes arriesgados.';
-    }
-
-    const record = {
+    this.stats.history.unshift({
       timestamp: new Date().toLocaleTimeString(),
       mode: this.mode,
       level: this.level,
       speedMs: this.speedMs,
       batchSize: this.batchSize,
       actual: this.runningCount,
-      guess: isNaN(guess) ? null : guess,
+      guess,
       correct
-    };
-
-    this.stats.history.unshift(record);
+    });
     if (this.stats.history.length > 20) this.stats.history.pop();
 
     this.onStateChange({ isRunning: false, waitingInput: false });
@@ -174,8 +170,8 @@ export class CountingTrainer {
       guess,
       diff,
       tcEstimate,
-      bettingAdvice,
-      strategicDeviation,
+      bettingAdvice: this.getBetAdvice(tcEstimate),
+      strategicDeviation: this.getDeviationHint(tcEstimate),
       nextLevel: this.level,
       nextSpeed: Math.max(250, 1500 - (this.level - 1) * 120)
     };

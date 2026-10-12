@@ -1,0 +1,14 @@
+{
+  "name": "blackademy-pro",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulador de blackjack y entrenador de conteo Hi-Lo",
+  "scripts": {
+    "test": "node --test tests/",
+    "test:sim": "node --test tests/montecarlo.test.js",
+    "serve": "npx serve ."
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}

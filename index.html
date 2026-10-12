@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blackademy Pro & Counter Trainer</title>
+  <meta name="description" content="Simulador de blackjack y entrenador de conteo Hi-Lo con estrategia básica S17/H17 y desviaciones Illustrious 18.">
+  <meta name="theme-color" content="#0d4428">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/redesign.css">
 </head>
 <body>
   <header>
@@ -12,14 +15,64 @@
       <span style="font-size: 1.8rem;">♠♥</span>
       <h1>Blackademy Pro</h1>
     </div>
-    <nav class="nav-tabs">
-      <button class="tab-btn active" data-target="tab-table">Mesa de Juego (5 Slots)</button>
-      <button class="tab-btn" data-target="tab-counting">Entrenador de Conteo</button>
-      <button class="tab-btn" data-target="tab-mnemonics">Mnemotecnia y Memoria</button>
-      <button class="tab-btn" data-target="tab-quiz">Flashcard Quiz</button>
-      <button class="tab-btn" data-target="tab-strategy">Tablas de Estrategia</button>
-      <button class="tab-btn" data-target="tab-rules">Reglas y Ajustes</button>
+    <nav class="nav-tabs" aria-label="Secciones principales">
+      <button
+        type="button"
+        class="tab-btn active"
+        data-target="tab-table"
+      >
+        Mesa
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-gamification"
+      >
+        Ruta de aprendizaje
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-counting"
+      >
+        Conteo Hi-Lo
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-mnemonics"
+      >
+        Memoria
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-quiz"
+      >
+        Quiz
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-strategy"
+      >
+        Estrategia
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        data-target="tab-rules"
+      >
+        Ajustes
+      </button>
     </nav>
+    <button class="icon-btn" id="btn-sound" type="button" aria-pressed="true" aria-label="Activar o silenciar el sonido" title="Sonido">🔊</button>
   </header>
 
   <main>
@@ -27,7 +80,7 @@
     <section id="tab-table" class="tab-content active">
       <div class="casino-table">
         <div class="table-header">
-          <div class="table-rules-banner">Blackjack paga 3 a 2 • Dealer se planta en 17 suave (S17) • Seguro disponible</div>
+          <div class="table-rules-banner">Blackjack paga 3 a 2 • Dealer se planta en 17 suave (S17) • Rendición tardía • Sin seguro</div>
           <div class="shoe-stats">
             <span>Running Count (RC): <strong id="running-count-display">0</strong></span>
             <span>True Count (TC): <strong id="true-count-display">0.0</strong></span>
@@ -47,6 +100,7 @@
         <div class="action-bar">
           <div class="action-buttons">
             <button class="btn-action btn-deal" id="btn-deal">Repartir (Deal)</button>
+            <button class="btn-action" id="btn-deal-mode" type="button" title="Alternar entre reparto manual paso a paso o automático">Modo: Manual 🖐️</button>
             <button class="btn-action btn-hit" id="btn-hit" disabled>Pedir (Hit)</button>
             <button class="btn-action btn-stand" id="btn-stand" disabled>Plantarse (Stand)</button>
             <button class="btn-action btn-double" id="btn-double" disabled>Doblar (Double)</button>
@@ -54,7 +108,7 @@
             <button class="btn-action btn-surrender" id="btn-surrender" disabled>Rendirse (Surrender)</button>
           </div>
 
-          <div id="tip-display" class="tip-box" style="display: none;"></div>
+          <div id="tip-display" class="tip-box" style="display: none;" aria-live="polite"></div>
         </div>
 
         <div class="sidebar-panel">
@@ -66,7 +120,41 @@
       </div>
     </section>
 
-    <!-- TAB 2: ENTRENADOR DE CONTEO HI-LO -->
+    <!-- TAB 2: GAMIFICATION -->
+    <section id="tab-gamification" class="tab-content">
+      <div class="gamification-dashboard">
+        <div class="duo-header-bar">
+          <div class="duo-stat"><span class="icon">❤️</span> <strong id="duo-hearts">5/5</strong></div>
+          <div class="duo-stat"><span class="icon">🔥</span> <strong id="duo-streak">1 Días</strong></div>
+          <div class="duo-stat"><span class="icon">⚡</span> <strong id="duo-xp">0 XP</strong></div>
+          <div class="duo-stat"><span class="icon">🏅</span> <strong id="duo-level">Nv. 1</strong></div>
+          <div class="duo-stat"><span class="icon">💎</span> <strong id="duo-gems">100</strong></div>
+          <button class="btn-refill-hearts" id="btn-refill-hearts">+ Recargar Vidas (30 💎)</button>
+        </div>
+
+        <div class="tree-container" id="gamification-tree-container">
+          <!-- Los mundos y nodos se inyectan dinámicamente -->
+        </div>
+
+        <!-- Modal interactivo de lección estilo Duolingo -->
+        <div id="duo-lesson-modal" class="duo-modal" style="display:none;">
+          <div class="duo-modal-content">
+            <div class="duo-modal-header">
+              <h3 id="duo-modal-title">Lección</h3>
+              <button id="btn-close-lesson" class="btn-close-x">✕</button>
+            </div>
+            <div class="duo-progress-bar-wrap">
+              <div id="duo-progress-fill" class="duo-progress-bar-inner"></div>
+            </div>
+            <div id="duo-stage-area" class="duo-stage-area"></div>
+            <div id="duo-interaction-controls" class="duo-controls-area"></div>
+            <div id="duo-feedback-banner" class="duo-feedback-banner" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ENTRENADOR DE CONTEO HI-LO -->
     <section id="tab-counting" class="tab-content">
       <div class="counting-trainer-wrapper">
         <h2 style="color:var(--accent-gold);margin-bottom:8px;">Gimnasio de Conteo de Cartas (Método Hi-Lo)</h2>
@@ -110,7 +198,7 @@
           <button class="btn-action btn-deal" id="btn-submit-count" style="max-width:140px;">Validar</button>
         </div>
 
-        <div id="trainer-feedback" style="margin-top:15px;"></div>
+        <div id="trainer-feedback" style="margin-top:15px;" aria-live="polite"></div>
 
         <div class="stats-history-grid">
           <div class="stat-pill">
@@ -265,6 +353,9 @@
       </div>
     </section>
   </main>
+
+  <noscript><p style="padding:16px;">Esta aplicación necesita JavaScript habilitado.</p></noscript>
+  <footer class="site-footer">Simulador educativo con dinero virtual. No es una plataforma de apuestas. Solo mayores de 18 años. Contar cartas es legal, pero un casino puede negarte el servicio.</footer>
 
   <script type="module" src="js/app.js"></script>
 </body>

@@ -1,4 +1,4 @@
-// engine.js - Motor de mesa multislot con reparto secuencial fluido
+// engine.js - Motor de mesa multislot (reglas de casino, peek de blackjack, splits correctos)
 import { Card, RANKS, SUITS, evaluateHand, getRecommendedAction } from './strategy.js';
 import { sounds } from './audio.js';
 
@@ -7,18 +7,14 @@ export class Shoe {
     this.decks = decks;
     this.penetration = penetration;
     this.cards = [];
-    this.discardPile = [];
     this.reset();
   }
 
   reset() {
     this.cards = [];
-    this.discardPile = [];
     for (let d = 0; d < this.decks; d++) {
       for (const s of SUITS) {
-        for (const r of RANKS) {
-          this.cards.push(new Card(r, s));
-        }
+        for (const r of RANKS) this.cards.push(new Card(r, s));
       }
     }
     this.shuffle();
@@ -31,10 +27,9 @@ export class Shoe {
     }
   }
 
+  // Solo rebaraja si el zapato se agota; el corte se evalúa entre rondas (needsShuffle).
   draw() {
-    if (this.needsShuffle()) {
-      this.reset();
-    }
+    if (this.cards.length === 0) this.reset();
     return this.cards.pop();
   }
 
@@ -60,6 +55,7 @@ export class Hand {
     this.isDone = false;
     this.isSurrendered = false;
     this.isDoubled = false;
+    this.fromSplit = false;
     this.result = null;
     this.payout = 0;
   }
@@ -81,6 +77,7 @@ export class Slot {
 
 export class BlackjackEngine {
   constructor(rules = {}, onUpdate = null) {
+    const { scheduler, ...ruleValues } = rules;
     this.rules = {
       decks: 6,
       dealerS17: true,
@@ -88,9 +85,13 @@ export class BlackjackEngine {
       allowDAS: true,
       allowSurrender: true,
       maxSplits: 4,
-      dealingSpeedMs: 280, // Velocidad de reparto secuencial realista
-      ...rules
+      dealingSpeedMs: 800,
+      ...ruleValues
     };
+
+    this.scheduler = scheduler || ((fn, ms) => setTimeout(fn, ms));
+    this.roundId = 0;
+    this.destroyed = false;
 
     this.onUpdate = onUpdate || (() => {});
     this.shoe = new Shoe(this.rules.decks);
@@ -109,7 +110,13 @@ export class BlackjackEngine {
     this.currentSlotIndex = -1;
     this.currentHandIndex = -1;
     this.lastFeedback = null;
+    this.lastError = null;
     this.isDealing = false;
+
+    this.autoDeal = false;
+    this.dealQueue = [];
+    this.dealQueueIndex = 0;
+    this.lastDealtTarget = null;
   }
 
   get trueCount() {
@@ -118,6 +125,27 @@ export class BlackjackEngine {
 
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Programa un callback ligado a la ronda actual: si la ronda cambia o el motor se destruye, se ignora.
+  schedule(fn, ms) {
+    const rid = this.roundId;
+    return this.scheduler(() => {
+      if (!this.destroyed && rid === this.roundId) fn();
+    }, ms);
+  }
+
+  destroy() {
+    this.destroyed = true;
+    this.roundId++;
+  }
+
+  rebuy(slotId, amount = 1000) {
+    const slot = this.slots.find(s => s.id === slotId);
+    if (!slot) return false;
+    slot.balance += amount;
+    this.onUpdate();
+    return true;
   }
 
   dealSingleCard(toDealer = false) {
@@ -137,79 +165,130 @@ export class BlackjackEngine {
     }
   }
 
-  async startRound() {
+  toggleDealMode() {
+    this.autoDeal = !this.autoDeal;
+    return this.autoDeal;
+  }
+
+  getHandOptions(slot, hand) {
+    const two = hand.cards.length === 2;
+    const isSplit = hand.fromSplit === true;
+    const splitAces = isSplit && hand.cards[0]?.rank === 'A';
+    return {
+      canDouble: two && !splitAces && slot.balance >= hand.bet && (!isSplit || this.rules.allowDAS),
+      canSplit: two && !splitAces && hand.cards[0].value === hand.cards[1].value &&
+                slot.balance >= hand.bet && slot.hands.length < this.rules.maxSplits,
+      canSurrender: this.rules.allowSurrender && two && !isSplit
+    };
+  }
+
+  startRound() {
+    this.lastError = null;
     if (this.phase !== 'BETTING' && this.phase !== 'SETTLED') return false;
     if (this.isDealing) return false;
 
-    // Configurar apuestas para bots y validar fondos
+    this.roundId++;
+
+    if (this.shoe.needsShuffle()) {
+      this.shoe.reset();
+      this.runningCount = 0;
+    }
+
     for (const slot of this.slots) {
+      slot.hands = [];
       if (slot.type === 'EMPTY') continue;
 
       if (slot.type === 'BOT_BASIC') {
         slot.baseBet = 25;
       } else if (slot.type === 'BOT_COUNTER') {
-        const units = Math.max(1, Math.min(6, Math.floor(this.trueCount)));
-        slot.baseBet = 25 * (this.trueCount >= 1 ? units : 1);
+        const tc = this.trueCount;
+        slot.baseBet = 25 * (tc >= 1 ? Math.min(6, Math.floor(tc)) : 1);
       }
+      if (slot.balance < slot.baseBet) slot.baseBet = Math.floor(slot.balance);
 
-      if (slot.balance < slot.baseBet) {
-        slot.baseBet = slot.balance;
-      }
-
-      if (slot.baseBet > 0 && slot.balance >= slot.baseBet) {
+      if (slot.baseBet > 0) {
         slot.balance -= slot.baseBet;
-        const initialHand = new Hand(slot.baseBet);
-        slot.hands = [initialHand];
+        slot.hands = [new Hand(slot.baseBet)];
         sounds.playChip();
-      } else {
-        slot.hands = [];
       }
     }
 
     const activeSlots = this.slots.filter(s => s.hands.length > 0);
-    if (activeSlots.length === 0) return false;
+    if (activeSlots.length === 0) {
+      this.lastError = 'NO_FUNDS';
+      return false;
+    }
 
-    this.isDealing = true;
-    this.phase = 'DEALING';
+    this.dealQueue = [];
+    this.dealQueueIndex = 0;
     this.dealerCards = [];
     this.dealerHidden = true;
     this.lastFeedback = null;
-    this.onUpdate();
+    this.lastDealtTarget = null;
 
-    const delay = this.rules.dealingSpeedMs;
+    for (const slot of activeSlots) this.dealQueue.push({ type: 'slot', slot, label: `Slot ${slot.id}` });
+    this.dealQueue.push({ type: 'dealer-up', label: 'Dealer' });
+    for (const slot of activeSlots) this.dealQueue.push({ type: 'slot', slot, label: `Slot ${slot.id}` });
+    this.dealQueue.push({ type: 'dealer-hole', label: 'Dealer (Oculta)' });
 
-    // Ronda 1: Carta 1 a cada jugador activo
-    for (const slot of activeSlots) {
-      await this.sleep(delay);
-      slot.hands[0].cards.push(this.dealSingleCard());
-      this.onUpdate();
-    }
+    this.phase = 'DEALING';
 
-    // Carta 1 al repartidor (visible)
-    await this.sleep(delay);
-    this.dealerCards.push(this.dealSingleCard(true));
-    this.onUpdate();
-
-    // Ronda 2: Carta 2 a cada jugador activo
-    for (const slot of activeSlots) {
-      await this.sleep(delay);
-      slot.hands[0].cards.push(this.dealSingleCard());
-      this.onUpdate();
-    }
-
-    // Carta 2 al repartidor (boca abajo)
-    await this.sleep(delay);
-    const holeCard = this.shoe.draw();
-    this.dealerCards.push(holeCard);
-    sounds.playCard();
-    this.onUpdate();
-
-    this.isDealing = false;
-    this.phase = 'PLAYER_TURNS';
-    this.advanceToNextTurn();
-    this.onUpdate();
+    if (this.autoDeal) this.runAutoDeal();
+    else this.onUpdate();
 
     return true;
+  }
+
+  dealNextStep() {
+    if (this.phase !== 'DEALING' || this.dealQueueIndex >= this.dealQueue.length) return false;
+
+    const step = this.dealQueue[this.dealQueueIndex];
+    this.lastDealtTarget = step;
+
+    if (step.type === 'slot') {
+      step.slot.hands[0].cards.push(this.dealSingleCard());
+    } else if (step.type === 'dealer-up') {
+      this.dealerCards.push(this.dealSingleCard(true));
+    } else if (step.type === 'dealer-hole') {
+      this.dealerCards.push(this.shoe.draw());
+      sounds.playCard();
+    }
+
+    this.dealQueueIndex++;
+
+    if (this.dealQueueIndex >= this.dealQueue.length) this.finishInitialDeal();
+    else this.onUpdate();
+
+    return true;
+  }
+
+  async runAutoDeal() {
+    this.isDealing = true;
+    this.onUpdate();
+    const rid = this.roundId;
+    while (this.dealQueueIndex < this.dealQueue.length) {
+      if (this.destroyed || rid !== this.roundId) break;
+      this.dealNextStep();
+      await this.sleep(this.rules.dealingSpeedMs);
+    }
+    this.isDealing = false;
+  }
+
+  finishInitialDeal() {
+    this.phase = 'PLAYER_TURNS';
+    const up = this.dealerCards[0];
+    const mayHaveBJ = up.rank === 'A' || up.value === 10;
+
+    if (mayHaveBJ && evaluateHand(this.dealerCards).isBlackjack) {
+      this.phase = 'DEALER_TURN';
+      this.revealDealerHoleCard();
+      this.slots.forEach(s => s.hands.forEach(h => { h.isDone = true; }));
+      this.onUpdate();
+      this.schedule(() => this.settleRound(), 700);
+      return;
+    }
+    this.onUpdate();
+    this.schedule(() => this.advanceToNextTurn(), 400);
   }
 
   advanceToNextTurn() {
@@ -219,22 +298,22 @@ export class BlackjackEngine {
 
       for (let hIdx = 0; hIdx < slot.hands.length; hIdx++) {
         const hand = slot.hands[hIdx];
-        if (!hand.isDone) {
-          const evalResult = evaluateHand(hand.cards);
-          if (evalResult.isBlackjack || evalResult.isBusted || evalResult.total === 21) {
-            hand.isDone = true;
-            continue;
-          }
+        if (hand.isDone) continue;
 
-          this.currentSlotIndex = sIdx;
-          this.currentHandIndex = hIdx;
-
-          if (slot.type.startsWith('BOT')) {
-            setTimeout(() => this.playBotTurn(sIdx, hIdx), 500);
-          }
-          this.onUpdate();
-          return;
+        const ev = evaluateHand(hand.cards);
+        if (ev.isBlackjack || ev.isBusted || ev.total === 21) {
+          hand.isDone = true;
+          continue;
         }
+
+        this.currentSlotIndex = sIdx;
+        this.currentHandIndex = hIdx;
+
+        if (slot.type.startsWith('BOT')) {
+          this.schedule(() => this.playBotTurn(sIdx, hIdx), 900);
+        }
+        this.onUpdate();
+        return;
       }
     }
 
@@ -242,154 +321,128 @@ export class BlackjackEngine {
     this.currentHandIndex = -1;
     this.phase = 'DEALER_TURN';
     this.onUpdate();
-    setTimeout(() => this.runDealerTurn(), 600);
+    this.schedule(() => this.runDealerTurn(), 800);
   }
 
   playBotTurn(slotIndex, handIndex) {
+    if (this.phase !== 'PLAYER_TURNS') return;
+    if (slotIndex !== this.currentSlotIndex || handIndex !== this.currentHandIndex) return;
     const slot = this.slots[slotIndex];
-    const hand = slot.hands[handIndex];
-    if (!hand || hand.isDone) {
-      this.advanceToNextTurn();
-      return;
-    }
-
-    const canSplit = hand.cards.length === 2 && 
-                     hand.cards[0].value === hand.cards[1].value && 
-                     slot.balance >= hand.bet && 
-                     slot.hands.length < this.rules.maxSplits;
-    const canDouble = hand.cards.length === 2 && slot.balance >= hand.bet;
-    const tc = slot.type === 'BOT_COUNTER' ? this.trueCount : null;
+    const hand = slot?.hands[handIndex];
+    if (!hand || hand.isDone) return;
 
     const rec = getRecommendedAction(hand, this.dealerCards[0], {
-      canDouble,
-      canSplit,
-      canSurrender: this.rules.allowSurrender && hand.cards.length === 2,
-      trueCount: tc
+      ...this.getHandOptions(slot, hand),
+      trueCount: slot.type === 'BOT_COUNTER' ? this.trueCount : null,
+      dealerS17: this.rules.dealerS17
     });
-
     this.executeAction(rec.action, slotIndex, handIndex);
   }
 
   executeAction(action, slotIdx = this.currentSlotIndex, handIdx = this.currentHandIndex) {
+    if (this.phase !== 'PLAYER_TURNS') return false;
+    if (slotIdx !== this.currentSlotIndex || handIdx !== this.currentHandIndex) return false;
     const slot = this.slots[slotIdx];
-    if (!slot) return;
-    const hand = slot.hands[handIdx];
-    if (!hand || hand.isDone) return;
+    const hand = slot?.hands[handIdx];
+    if (!hand || hand.isDone) return false;
 
-    const canSplit = hand.cards.length === 2 && 
-                     hand.cards[0].value === hand.cards[1].value && 
-                     slot.balance >= hand.bet && 
-                     slot.hands.length < this.rules.maxSplits;
-    const canDouble = hand.cards.length === 2 && slot.balance >= hand.bet;
-
-    const rec = getRecommendedAction(hand, this.dealerCards[0], {
-      canDouble,
-      canSplit,
-      canSurrender: this.rules.allowSurrender && hand.cards.length === 2,
-      trueCount: this.trueCount
-    });
+    const opts = this.getHandOptions(slot, hand);
+    const legal = { H: true, S: true, D: opts.canDouble, P: opts.canSplit, Rh: opts.canSurrender };
+    if (!legal[action]) return false;
 
     if (slot.type === 'HUMAN') {
-      const isOptimal = (action === rec.action) || (action === 'H' && rec.action === 'Rh');
+      const rec = getRecommendedAction(hand, this.dealerCards[0], {
+        ...opts, trueCount: this.trueCount, dealerS17: this.rules.dealerS17
+      });
+      const isCorrect = action === rec.action;
       this.lastFeedback = {
         chosen: action,
         optimal: rec.action,
-        isCorrect: isOptimal,
+        isCorrect,
         tip: rec.tip,
         mathExplanation: rec.mathExplanation,
         deviation: rec.deviation
       };
-      if (!isOptimal) {
-        sounds.playBuzzer();
-      }
+      if (!isCorrect) sounds.playBuzzer();
     }
 
     switch (action) {
       case 'H': {
         hand.cards.push(this.dealSingleCard());
         const ev = evaluateHand(hand.cards);
-        if (ev.isBusted || ev.total === 21) {
-          hand.isDone = true;
-        }
+        if (ev.isBusted || ev.total === 21) hand.isDone = true;
         break;
       }
-      case 'S': {
+      case 'S':
         hand.isDone = true;
         break;
-      }
-      case 'D': {
-        if (canDouble) {
-          slot.balance -= hand.bet;
-          hand.bet *= 2;
-          hand.isDoubled = true;
-          hand.cards.push(this.dealSingleCard());
-          hand.isDone = true;
-          sounds.playChip();
-        }
+      case 'D':
+        slot.balance -= hand.bet;
+        hand.bet *= 2;
+        hand.isDoubled = true;
+        hand.cards.push(this.dealSingleCard());
+        hand.isDone = true;
+        sounds.playChip();
         break;
-      }
       case 'P': {
-        if (canSplit) {
-          slot.balance -= hand.bet;
-          sounds.playChip();
-          const secondCard = hand.cards.pop();
-          const newHand = new Hand(hand.bet);
-          newHand.cards.push(secondCard);
-
-          hand.cards.push(this.dealSingleCard());
-          newHand.cards.push(this.dealSingleCard());
-
-          slot.hands.splice(handIdx + 1, 0, newHand);
-        }
-        break;
-      }
-      case 'Rh': {
-        if (this.rules.allowSurrender && hand.cards.length === 2) {
-          hand.isSurrendered = true;
+        slot.balance -= hand.bet;
+        sounds.playChip();
+        const isAces = hand.cards[0].rank === 'A';
+        const newHand = new Hand(hand.bet);
+        hand.fromSplit = true;
+        newHand.fromSplit = true;
+        newHand.cards.push(hand.cards.pop());
+        hand.cards.push(this.dealSingleCard());
+        newHand.cards.push(this.dealSingleCard());
+        if (isAces) {
           hand.isDone = true;
-          slot.balance += hand.bet / 2;
+          newHand.isDone = true;
         }
+        slot.hands.splice(handIdx + 1, 0, newHand);
         break;
       }
+      case 'Rh':
+        hand.isSurrendered = true;
+        hand.isDone = true;
+        slot.balance += hand.bet / 2;
+        break;
     }
 
     this.advanceToNextTurn();
+    return true;
   }
 
   runDealerTurn() {
     this.revealDealerHoleCard();
 
-    let anyHandActive = false;
-    for (const slot of this.slots) {
-      for (const hand of slot.hands) {
-        const ev = evaluateHand(hand.cards);
-        if (!hand.isSurrendered && !ev.isBusted) {
-          anyHandActive = true;
-          break;
-        }
-      }
-    }
+    const needsDealerPlay = this.slots.some(slot => slot.hands.some(hand => {
+      if (hand.isSurrendered) return false;
+      const ev = evaluateHand(hand.cards);
+      if (ev.isBusted) return false;
+      if (ev.isBlackjack && !hand.fromSplit) return false;
+      return true;
+    }));
 
-    if (!anyHandActive) {
+    if (!needsDealerPlay) {
       this.settleRound();
       return;
     }
 
     const drawDealerLoop = () => {
-      const evalDealer = evaluateHand(this.dealerCards);
-      const isSoft17 = evalDealer.total === 17 && evalDealer.isSoft;
-      const mustHit = evalDealer.total < 17 || (isSoft17 && !this.rules.dealerS17);
+      const dealerEval = evaluateHand(this.dealerCards);
+      const isSoft17 = dealerEval.total === 17 && dealerEval.isSoft;
+      const mustHit = dealerEval.total < 17 || (isSoft17 && !this.rules.dealerS17);
 
       if (mustHit) {
         this.dealerCards.push(this.dealSingleCard());
         this.onUpdate();
-        setTimeout(drawDealerLoop, 600);
+        this.schedule(drawDealerLoop, 850);
       } else {
         this.settleRound();
       }
     };
 
-    setTimeout(drawDealerLoop, 500);
+    this.schedule(drawDealerLoop, 750);
   }
 
   settleRound() {
@@ -411,42 +464,42 @@ export class BlackjackEngine {
         }
 
         const playerEval = evaluateHand(hand.cards);
+        const isHuman = slot.type === 'HUMAN';
 
         if (playerEval.isBusted) {
           hand.result = 'LOSS';
-          if (slot.type === 'HUMAN') humanLostAny = true;
+          if (isHuman) humanLostAny = true;
           continue;
         }
 
-        if (playerEval.isBlackjack) {
+        if (playerEval.isBlackjack && !hand.fromSplit) {
           if (dealerBJ) {
             hand.result = 'PUSH';
             slot.balance += hand.bet;
           } else {
             hand.result = 'BLACKJACK';
-            const winAmount = hand.bet + (hand.bet * this.rules.blackjackPayout);
-            slot.balance += winAmount;
-            if (slot.type === 'HUMAN') humanWonAny = true;
+            slot.balance += hand.bet + hand.bet * this.rules.blackjackPayout;
+            if (isHuman) humanWonAny = true;
           }
           continue;
         }
 
         if (dealerBJ) {
           hand.result = 'LOSS';
-          if (slot.type === 'HUMAN') humanLostAny = true;
+          if (isHuman) humanLostAny = true;
           continue;
         }
 
         if (dealerBust || playerEval.total > dealerTotal) {
           hand.result = 'WIN';
           slot.balance += hand.bet * 2;
-          if (slot.type === 'HUMAN') humanWonAny = true;
+          if (isHuman) humanWonAny = true;
         } else if (playerEval.total === dealerTotal) {
           hand.result = 'PUSH';
           slot.balance += hand.bet;
         } else {
           hand.result = 'LOSS';
-          if (slot.type === 'HUMAN') humanLostAny = true;
+          if (isHuman) humanLostAny = true;
         }
       }
     }
